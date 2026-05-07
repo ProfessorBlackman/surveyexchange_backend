@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.UUID;
 @Entity
 @Table(
         name = "surveys",
-        indexes = @Index(name = "idx_surveys_boost_expiry", columnList = "boost_expiry")
+        indexes = @Index(name = "idx_surveys_boost_expires_at", columnList = "boost_expires_at")
 )
 @Getter
 @Setter
@@ -42,8 +43,8 @@ public class Survey {
 
     private Integer targetResponses;
 
-    @Column(name = "boost_expiry")
-    private LocalDateTime boostExpiry;
+    @Column(name = "boost_expires_at")
+    private Instant boostExpiresAt;
 
     @Column(nullable = false)
     private int creditValue;

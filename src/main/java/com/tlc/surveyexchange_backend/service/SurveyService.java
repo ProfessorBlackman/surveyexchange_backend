@@ -16,7 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.IntStream;
@@ -112,8 +112,8 @@ public class SurveyService {
                 .estimatedTime(survey.getEstimatedTime())
                 .targetResponses(survey.getTargetResponses())
                 .createdAt(survey.getCreatedAt())
-                .boostExpiry(survey.getBoostExpiry())
-                .boosted(survey.getBoostExpiry() != null && survey.getBoostExpiry().isAfter(LocalDateTime.now()))
+                .boostExpiresAt(survey.getBoostExpiresAt())
+                .boosted(survey.getBoostExpiresAt() != null && survey.getBoostExpiresAt().isAfter(Instant.now()))
                 .creditValue(survey.getCreditValue())
                 .owner(UserSummaryResponse.builder()
                         .id(survey.getOwner().getId())
@@ -133,7 +133,7 @@ public class SurveyService {
                 .estimatedTime(survey.getEstimatedTime())
                 .targetResponses(survey.getTargetResponses())
                 .createdAt(survey.getCreatedAt())
-                .boosted(survey.getBoostExpiry() != null && survey.getBoostExpiry().isAfter(LocalDateTime.now()))
+                .boosted(survey.getBoostExpiresAt() != null && survey.getBoostExpiresAt().isAfter(Instant.now()))
                 .creditValue(survey.getCreditValue())
                 .owner(UserSummaryResponse.builder()
                         .id(survey.getOwner().getId())

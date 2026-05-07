@@ -21,7 +21,7 @@ public interface SurveyRepository extends JpaRepository<Survey, UUID> {
                 SELECT r.survey.id FROM Response r WHERE r.user.id = :userId
             )
             ORDER BY
-                CASE WHEN s.boostExpiry > CURRENT_TIMESTAMP THEN 1 ELSE 0 END DESC,
+                CASE WHEN s.boostExpiresAt > CURRENT_TIMESTAMP THEN 0 ELSE 1 END ASC,
                 s.createdAt DESC
             """,
             countQuery = """

@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -22,7 +24,8 @@ public class SurveyResponse {
     private Integer estimatedTime;
     private Integer targetResponses;
     private LocalDateTime createdAt;
-    private LocalDateTime boostExpiry;
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    private Instant boostExpiresAt;
     private boolean boosted;
     private int creditValue;
     private UserSummaryResponse owner;

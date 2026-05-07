@@ -4,7 +4,6 @@ import com.tlc.surveyexchange_backend.dto.request.CreateSurveyRequest;
 import com.tlc.surveyexchange_backend.dto.request.SubmitResponseRequest;
 import com.tlc.surveyexchange_backend.dto.response.*;
 import com.tlc.surveyexchange_backend.security.UserPrincipal;
-import com.tlc.surveyexchange_backend.service.CreditService;
 import com.tlc.surveyexchange_backend.service.ResponseService;
 import com.tlc.surveyexchange_backend.service.SurveyService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,7 +32,6 @@ public class SurveyController {
 
     private final SurveyService surveyService;
     private final ResponseService responseService;
-    private final CreditService creditService;
 
     @Operation(
             summary = "Get survey feed",
@@ -119,22 +117,4 @@ public class SurveyController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @Operation(
-            summary = "Boost a survey",
-            description = "Deducts 5 credits from the owner and promotes the survey to the top of the feed for 24 hours. "
-                    + "Only the survey owner can boost their own survey."
-    )
-    @ApiResponse(responseCode = "200", description = "Survey boosted")
-    @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token", content = @Content)
-    @ApiResponse(responseCode = "403", description = "Not the survey owner or insufficient credits",
-            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
-    @ApiResponse(responseCode = "404", description = "Survey not found",
-            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
-    @PostMapping("/{id}/boost")
-    public ResponseEntity<Void> boostSurvey(
-            @Parameter(description = "Survey UUID") @PathVariable UUID id,
-            @AuthenticationPrincipal UserPrincipal currentUser) {
-        creditService.boostSurvey(id, currentUser.getId());
-        return ResponseEntity.ok().build();
-    }
 }

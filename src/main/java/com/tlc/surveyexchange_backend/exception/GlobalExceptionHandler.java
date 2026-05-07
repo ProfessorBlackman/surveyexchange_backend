@@ -29,9 +29,26 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.CONFLICT, ex.getMessage());
     }
 
+    @ExceptionHandler(AlreadyBoostedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAlreadyBoosted(AlreadyBoostedException ex) {
+        ApiErrorResponse body = ApiErrorResponse.builder()
+                .status(HttpStatus.CONFLICT.value())
+                .message(ex.getMessage())
+                .timestamp(LocalDateTime.now())
+                .boostExpiresAt(ex.getExpiresAt())
+                .build();
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
     @ExceptionHandler(InsufficientCreditsException.class)
     public ResponseEntity<ApiErrorResponse> handleInsufficientCredits(InsufficientCreditsException ex) {
-        return error(HttpStatus.FORBIDDEN, ex.getMessage());
+        ApiErrorResponse body = ApiErrorResponse.builder()
+                .status(HttpStatus.PAYMENT_REQUIRED.value())
+                .message(ex.getMessage())
+                .timestamp(LocalDateTime.now())
+                .balance(ex.getCurrentBalance())
+                .build();
+        return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(body);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
