@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -72,7 +73,7 @@ public class AnalyticsService {
         }
 
         Page<Response> responsePage = responseRepository
-                .findBySurveyIdOrderBySubmittedAtDesc(surveyId, PageRequest.of(page, size));
+                .findBySurveyIdOrderByRespondedAtDesc(surveyId, PageRequest.of(page, size));
 
         List<UUID> ids = responsePage.getContent().stream().map(Response::getId).toList();
 
@@ -81,7 +82,7 @@ public class AnalyticsService {
         }
 
         Map<UUID, Response> responseMap = responseRepository.findWithAnswersByIds(ids).stream()
-                .collect(java.util.stream.Collectors.toMap(Response::getId, r -> r));
+                .collect(Collectors.toMap(Response::getId, r -> r));
 
         List<ResponseRowDTO> rows = ids.stream()
                 .map(id -> mapToResponseRow(responseMap.getOrDefault(id, null)))
@@ -93,21 +94,24 @@ public class AnalyticsService {
     }
 
     private QuestionAnalyticsDTO buildQuestionAnalytics(Question question, long totalResponses) {
+        List<String> rawValues = answerRepository.findAnswerValuesByQuestion(question.getId());
+
         if (CHOICE_TYPES.contains(question.getQuestionType())) {
-            List<OptionDistributionDTO> distribution = answerRepository
-                    .countOptionsByQuestion(question.getId())
-                    .stream()
-                    .map(row -> {
-                        long count = (Long) row[1];
-                        double percentage = totalResponses > 0
-                                ? Math.round(count * 1000.0 / totalResponses) / 10.0
-                                : 0.0;
-                        return OptionDistributionDTO.builder()
-                                .option((String) row[0])
-                                .count(count)
-                                .percentage(percentage)
-                                .build();
-                    })
+            Map<String, Long> counts = rawValues.stream()
+                    .flatMap(v -> Arrays.stream(v.split(",")))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.groupingBy(s -> s, Collectors.counting()));
+
+            List<OptionDistributionDTO> distribution = counts.entrySet().stream()
+                    .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                    .map(e -> OptionDistributionDTO.builder()
+                            .option(e.getKey())
+                            .count(e.getValue())
+                            .percentage(totalResponses > 0
+                                    ? Math.round(e.getValue() * 1000.0 / totalResponses) / 10.0
+                                    : 0.0)
+                            .build())
                     .toList();
 
             return QuestionAnalyticsDTO.builder()
@@ -118,12 +122,11 @@ public class AnalyticsService {
                     .build();
         }
 
-        List<String> textResponses = answerRepository.findTextAnswersByQuestion(question.getId());
         return QuestionAnalyticsDTO.builder()
                 .questionId(question.getId())
                 .text(question.getText())
                 .type(question.getQuestionType())
-                .textResponses(textResponses)
+                .textResponses(rawValues)
                 .build();
     }
 
@@ -134,13 +137,12 @@ public class AnalyticsService {
                         .questionId(a.getQuestion().getId())
                         .questionText(a.getQuestion().getText())
                         .questionType(a.getQuestion().getQuestionType())
-                        .answerText(a.getAnswerText())
-                        .selectedOptions(a.getSelectedOptions().isEmpty() ? null : a.getSelectedOptions())
+                        .answerValue(a.getAnswerValue())
                         .build())
                 .toList();
         return ResponseRowDTO.builder()
                 .responseId(response.getId())
-                .submittedAt(response.getSubmittedAt())
+                .respondedAt(response.getRespondedAt())
                 .answers(answers)
                 .build();
     }

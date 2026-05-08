@@ -12,4 +12,6 @@ public class SubmitResponseRequest {
     @NotEmpty(message = "Answers list must not be empty")
     @Valid
     private List<AnswerRequest> answers;
+
+    private Integer timeToCompleteSeconds;
 }

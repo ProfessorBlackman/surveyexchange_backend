@@ -2,14 +2,13 @@ package com.tlc.surveyexchange_backend.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.CreationTimestamp;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "answers")
+@Table(name = "response_answers")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -29,13 +28,10 @@ public class Answer {
     @JoinColumn(name = "question_id", nullable = false)
     private Question question;
 
-    @Column(columnDefinition = "TEXT")
-    private String answerText;
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String answerValue;
 
-    @ElementCollection
-    @CollectionTable(name = "answer_selected_options", joinColumns = @JoinColumn(name = "answer_id"))
-    @Column(name = "option_value")
-    @BatchSize(size = 30)
-    @Builder.Default
-    private List<String> selectedOptions = new ArrayList<>();
+    @CreationTimestamp
+    @Column(updatable = false)
+    private Instant answeredAt;
 }

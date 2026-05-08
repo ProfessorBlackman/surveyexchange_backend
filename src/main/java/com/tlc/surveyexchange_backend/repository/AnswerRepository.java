@@ -11,19 +11,10 @@ import java.util.UUID;
 public interface AnswerRepository extends JpaRepository<Answer, UUID> {
 
     @Query("""
-            SELECT aso, COUNT(aso)
-            FROM Answer a JOIN a.selectedOptions aso
+            SELECT a.answerValue FROM Answer a
             WHERE a.question.id = :questionId
-            GROUP BY aso
-            ORDER BY COUNT(aso) DESC
+            AND a.answerValue IS NOT NULL
+            AND a.answerValue <> ''
             """)
-    List<Object[]> countOptionsByQuestion(@Param("questionId") UUID questionId);
-
-    @Query("""
-            SELECT a.answerText FROM Answer a
-            WHERE a.question.id = :questionId
-            AND a.answerText IS NOT NULL
-            AND a.answerText <> ''
-            """)
-    List<String> findTextAnswersByQuestion(@Param("questionId") UUID questionId);
+    List<String> findAnswerValuesByQuestion(@Param("questionId") UUID questionId);
 }

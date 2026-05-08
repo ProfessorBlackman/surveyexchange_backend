@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.tlc.surveyexchange_backend.model.SurveyStatus;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,6 +24,8 @@ public class SurveyResponse {
     private String category;
     private Integer estimatedTime;
     private Integer targetResponses;
+    private int actualResponseCount;
+    private SurveyStatus status;
     private LocalDateTime createdAt;
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Instant boostExpiresAt;

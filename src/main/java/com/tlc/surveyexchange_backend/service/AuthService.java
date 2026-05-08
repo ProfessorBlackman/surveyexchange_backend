@@ -38,11 +38,16 @@ public class AuthService {
         }
 
         User user = User.builder()
-                .name(request.getName())
+                .fullName(request.getFullName())
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .institution(request.getInstitution())
                 .fieldOfStudy(request.getFieldOfStudy())
+                .academicLevel(request.getAcademicLevel())
+                .yearOfStudy(request.getYearOfStudy())
+                .gender(request.getGender())
+                .ageRange(request.getAgeRange())
+                .referralSource(request.getReferralSource())
                 .creditBalance(10)
                 .build();
 
@@ -79,7 +84,7 @@ public class AuthService {
                 .accessToken(token)
                 .user(UserSummaryResponse.builder()
                         .id(user.getId())
-                        .name(user.getName())
+                        .name(user.getFullName())
                         .email(user.getEmail())
                         .creditBalance(user.getCreditBalance())
                         .build())

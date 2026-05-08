@@ -1,5 +1,6 @@
 package com.tlc.surveyexchange_backend.dto.request;
 
+import com.tlc.surveyexchange_backend.model.SurveyStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -20,6 +21,8 @@ public class CreateSurveyRequest {
     private Integer estimatedTime;
 
     private Integer targetResponses;
+
+    private SurveyStatus status;
 
     @NotEmpty(message = "Survey must have at least one question")
     @Valid

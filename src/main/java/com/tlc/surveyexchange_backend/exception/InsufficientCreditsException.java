@@ -1,5 +1,8 @@
 package com.tlc.surveyexchange_backend.exception;
 
+import lombok.Getter;
+
+@Getter
 public class InsufficientCreditsException extends RuntimeException {
 
     private final int currentBalance;
@@ -9,7 +12,4 @@ public class InsufficientCreditsException extends RuntimeException {
         this.currentBalance = currentBalance;
     }
 
-    public int getCurrentBalance() {
-        return currentBalance;
-    }
 }

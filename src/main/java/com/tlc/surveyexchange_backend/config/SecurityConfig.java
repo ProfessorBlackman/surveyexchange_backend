@@ -1,5 +1,6 @@
 package com.tlc.surveyexchange_backend.config;
 
+import com.tlc.surveyexchange_backend.security.ActivityTrackingFilter;
 import com.tlc.surveyexchange_backend.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -25,6 +26,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ActivityTrackingFilter activityTrackingFilter;
     private final AuthenticationProvider authenticationProvider;
 
     @Bean
@@ -41,7 +43,8 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(activityTrackingFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }

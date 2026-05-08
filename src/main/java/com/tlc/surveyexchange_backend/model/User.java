@@ -3,9 +3,8 @@ package com.tlc.surveyexchange_backend.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -27,24 +26,45 @@ public class User {
     @Column(nullable = false)
     private String passwordHash;
 
-    @Column(nullable = false)
-    private String name;
+    @Column(name = "full_name", nullable = false)
+    private String fullName;
 
+    @Column(nullable = false)
     private String institution;
 
+    @Column(nullable = false)
     private String fieldOfStudy;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AcademicLevel academicLevel;
+
+    @Column
+    private Integer yearOfStudy;
+
+    @Enumerated(EnumType.STRING)
+    @Column
+    private Gender gender;
+
+    @Enumerated(EnumType.STRING)
+    @Column
+    private AgeRange ageRange;
+
+    @Enumerated(EnumType.STRING)
+    @Column
+    private ReferralSource referralSource;
 
     @Column(nullable = false)
     @Builder.Default
-    private int creditBalance = 0;
+    private int creditBalance = 10;
+
+    @Column
+    private Instant lastActiveAt;
 
     @Version
     private Long version;
 
     @CreationTimestamp
     @Column(updatable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
+    private Instant createdAt;
 }

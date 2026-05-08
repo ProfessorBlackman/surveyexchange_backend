@@ -1,7 +1,10 @@
 package com.tlc.surveyexchange_backend.exception;
 
+import lombok.Getter;
+
 import java.time.Instant;
 
+@Getter
 public class AlreadyBoostedException extends RuntimeException {
 
     private final Instant expiresAt;
@@ -11,7 +14,4 @@ public class AlreadyBoostedException extends RuntimeException {
         this.expiresAt = expiresAt;
     }
 
-    public Instant getExpiresAt() {
-        return expiresAt;
-    }
 }

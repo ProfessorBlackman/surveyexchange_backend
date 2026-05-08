@@ -2,10 +2,14 @@ package com.tlc.surveyexchange_backend.service;
 
 import com.tlc.surveyexchange_backend.dto.request.CreateSurveyRequest;
 import com.tlc.surveyexchange_backend.dto.request.QuestionRequest;
+import com.tlc.surveyexchange_backend.dto.request.UpdateSurveyRequest;
 import com.tlc.surveyexchange_backend.dto.response.*;
 import com.tlc.surveyexchange_backend.exception.ResourceNotFoundException;
+import com.tlc.surveyexchange_backend.exception.ForbiddenOperationException;
+import com.tlc.surveyexchange_backend.exception.InvalidStatusTransitionException;
 import com.tlc.surveyexchange_backend.model.Question;
 import com.tlc.surveyexchange_backend.model.Survey;
+import com.tlc.surveyexchange_backend.model.SurveyStatus;
 import com.tlc.surveyexchange_backend.model.User;
 import com.tlc.surveyexchange_backend.util.SurveyValueCalculator;
 import com.tlc.surveyexchange_backend.repository.SurveyRepository;
@@ -35,6 +39,7 @@ public class SurveyService {
         User owner = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", userId));
 
+        SurveyStatus status = (request.getStatus() == SurveyStatus.ACTIVE) ? SurveyStatus.ACTIVE : SurveyStatus.DRAFT;
         Survey survey = Survey.builder()
                 .owner(owner)
                 .title(request.getTitle())
@@ -42,6 +47,8 @@ public class SurveyService {
                 .category(request.getCategory())
                 .estimatedTime(request.getEstimatedTime())
                 .targetResponses(request.getTargetResponses())
+                .status(status)
+                .publishedAt(status == SurveyStatus.ACTIVE ? Instant.now() : null)
                 .build();
 
         List<Question> questions = IntStream.range(0, request.getQuestions().size())
@@ -92,6 +99,72 @@ public class SurveyService {
                 .orElseThrow(() -> new ResourceNotFoundException("Survey", id));
     }
 
+    @Transactional
+    public SurveyResponse updateSurvey(UUID surveyId, UUID requesterId, UpdateSurveyRequest request) {
+        Survey survey = surveyRepository.findByIdWithQuestions(surveyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Survey", surveyId));
+
+        if (!survey.getOwner().getId().equals(requesterId)) {
+            throw new ForbiddenOperationException("Only the survey owner can edit this survey");
+        }
+
+        if (survey.getStatus() == SurveyStatus.CLOSED) {
+            throw new ForbiddenOperationException("Cannot edit a closed survey");
+        }
+
+        survey.setTitle(request.getTitle());
+        if (request.getDescription() != null) survey.setDescription(request.getDescription());
+        if (request.getCategory() != null) survey.setCategory(request.getCategory());
+        if (request.getEstimatedTime() != null) survey.setEstimatedTime(request.getEstimatedTime());
+        if (request.getTargetResponses() != null) survey.setTargetResponses(request.getTargetResponses());
+
+        if (request.getQuestions() != null) {
+            survey.getQuestions().clear();
+            List<Question> newQuestions = IntStream.range(0, request.getQuestions().size())
+                    .mapToObj(i -> {
+                        var qr = request.getQuestions().get(i);
+                        return Question.builder()
+                                .survey(survey)
+                                .text(qr.getText())
+                                .questionType(qr.getQuestionType())
+                                .options(qr.getOptions() != null ? qr.getOptions() : List.of())
+                                .required(qr.isRequired())
+                                .orderIndex(qr.getOrderIndex() > 0 ? qr.getOrderIndex() : i)
+                                .build();
+                    })
+                    .toList();
+            survey.getQuestions().addAll(newQuestions);
+            survey.setCreditValue(SurveyValueCalculator.calculate(
+                    request.getQuestions().stream().map(QuestionRequest::getQuestionType).toList()));
+        }
+
+        return mapToSurveyResponse(surveyRepository.save(survey));
+    }
+
+    @Transactional
+    public SurveySummaryResponse updateStatus(UUID surveyId, UUID requesterId, SurveyStatus newStatus) {
+        Survey survey = surveyRepository.findById(surveyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Survey", surveyId));
+
+        if (!survey.getOwner().getId().equals(requesterId)) {
+            throw new ForbiddenOperationException("Only the survey owner can update this survey");
+        }
+
+        if (survey.getStatus() == newStatus) {
+            throw new InvalidStatusTransitionException(
+                    "Survey is already " + newStatus.name().toLowerCase().replace('_', '-'));
+        }
+
+        survey.setStatus(newStatus);
+        if (newStatus == SurveyStatus.ACTIVE) {
+            survey.setPublishedAt(Instant.now());
+        } else if (newStatus == SurveyStatus.CLOSED) {
+            survey.setClosedAt(Instant.now());
+        }
+
+        return mapToSurveySummary(surveyRepository.save(survey));
+    }
+
     public SurveyResponse mapToSurveyResponse(Survey survey) {
         List<QuestionResponse> questions = survey.getQuestions().stream()
                 .map(q -> QuestionResponse.builder()
@@ -111,13 +184,15 @@ public class SurveyService {
                 .category(survey.getCategory())
                 .estimatedTime(survey.getEstimatedTime())
                 .targetResponses(survey.getTargetResponses())
+                .actualResponseCount(survey.getActualResponseCount())
+                .status(survey.getStatus())
                 .createdAt(survey.getCreatedAt())
                 .boostExpiresAt(survey.getBoostExpiresAt())
                 .boosted(survey.getBoostExpiresAt() != null && survey.getBoostExpiresAt().isAfter(Instant.now()))
                 .creditValue(survey.getCreditValue())
                 .owner(UserSummaryResponse.builder()
                         .id(survey.getOwner().getId())
-                        .name(survey.getOwner().getName())
+                        .name(survey.getOwner().getFullName())
                         .email(survey.getOwner().getEmail())
                         .creditBalance(survey.getOwner().getCreditBalance())
                         .build())
@@ -132,12 +207,16 @@ public class SurveyService {
                 .category(survey.getCategory())
                 .estimatedTime(survey.getEstimatedTime())
                 .targetResponses(survey.getTargetResponses())
+                .actualResponseCount(survey.getActualResponseCount())
+                .status(survey.getStatus())
                 .createdAt(survey.getCreatedAt())
+                .publishedAt(survey.getPublishedAt())
+                .boostExpiresAt(survey.getBoostExpiresAt())
                 .boosted(survey.getBoostExpiresAt() != null && survey.getBoostExpiresAt().isAfter(Instant.now()))
                 .creditValue(survey.getCreditValue())
                 .owner(UserSummaryResponse.builder()
                         .id(survey.getOwner().getId())
-                        .name(survey.getOwner().getName())
+                        .name(survey.getOwner().getFullName())
                         .email(survey.getOwner().getEmail())
                         .creditBalance(survey.getOwner().getCreditBalance())
                         .build())

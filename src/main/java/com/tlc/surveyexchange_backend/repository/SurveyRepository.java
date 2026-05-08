@@ -17,8 +17,9 @@ public interface SurveyRepository extends JpaRepository<Survey, UUID> {
             SELECT s FROM Survey s
             JOIN FETCH s.owner
             WHERE s.owner.id <> :userId
+            AND s.status = 'ACTIVE'
             AND s.id NOT IN (
-                SELECT r.survey.id FROM Response r WHERE r.user.id = :userId
+                SELECT r.survey.id FROM Response r WHERE r.respondent.id = :userId
             )
             ORDER BY
                 CASE WHEN s.boostExpiresAt > CURRENT_TIMESTAMP THEN 0 ELSE 1 END ASC,
@@ -27,8 +28,9 @@ public interface SurveyRepository extends JpaRepository<Survey, UUID> {
             countQuery = """
             SELECT COUNT(s) FROM Survey s
             WHERE s.owner.id <> :userId
+            AND s.status = 'ACTIVE'
             AND s.id NOT IN (
-                SELECT r.survey.id FROM Response r WHERE r.user.id = :userId
+                SELECT r.survey.id FROM Response r WHERE r.respondent.id = :userId
             )
             """)
     Page<Survey> findFeedForUser(@Param("userId") UUID userId, Pageable pageable);

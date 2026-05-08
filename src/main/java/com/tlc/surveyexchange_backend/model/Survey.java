@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+
 @Entity
 @Table(
         name = "surveys",
@@ -45,6 +46,21 @@ public class Survey {
 
     @Column(name = "boost_expires_at")
     private Instant boostExpiresAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private SurveyStatus status = SurveyStatus.DRAFT;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private int actualResponseCount = 0;
+
+    @Column
+    private Instant publishedAt;
+
+    @Column
+    private Instant closedAt;
 
     @Column(nullable = false)
     private int creditValue;

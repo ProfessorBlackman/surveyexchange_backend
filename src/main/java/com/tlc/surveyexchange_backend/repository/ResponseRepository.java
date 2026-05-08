@@ -13,20 +13,20 @@ import java.util.UUID;
 
 public interface ResponseRepository extends JpaRepository<Response, UUID> {
 
-    boolean existsByUserIdAndSurveyId(UUID userId, UUID surveyId);
+    boolean existsByRespondentIdAndSurveyId(UUID respondentId, UUID surveyId);
 
-    Optional<Response> findByUserIdAndSurveyId(UUID userId, UUID surveyId);
+    Optional<Response> findByRespondentIdAndSurveyId(UUID respondentId, UUID surveyId);
 
     long countBySurveyId(UUID surveyId);
 
-    Page<Response> findBySurveyIdOrderBySubmittedAtDesc(UUID surveyId, Pageable pageable);
+    Page<Response> findBySurveyIdOrderByRespondedAtDesc(UUID surveyId, Pageable pageable);
 
     @Query("""
             SELECT DISTINCT r FROM Response r
             LEFT JOIN FETCH r.answers a
             LEFT JOIN FETCH a.question
             WHERE r.id IN :ids
-            ORDER BY r.submittedAt DESC
+            ORDER BY r.respondedAt DESC
             """)
     List<Response> findWithAnswersByIds(@Param("ids") List<UUID> ids);
 }

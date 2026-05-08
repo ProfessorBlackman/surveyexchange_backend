@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -13,10 +13,10 @@ import java.util.UUID;
 @Table(
         name = "responses",
         uniqueConstraints = @UniqueConstraint(
-                name = "uk_response_user_survey",
-                columnNames = {"user_id", "survey_id"}
+                name = "uk_response_respondent_survey",
+                columnNames = {"respondent_id", "survey_id"}
         ),
-        indexes = @Index(name = "idx_responses_user_survey", columnList = "user_id, survey_id")
+        indexes = @Index(name = "idx_responses_respondent_survey", columnList = "respondent_id, survey_id")
 )
 @Getter
 @Setter
@@ -30,8 +30,8 @@ public class Response {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "respondent_id", nullable = false)
+    private User respondent;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "survey_id", nullable = false)
@@ -41,7 +41,20 @@ public class Response {
     @Builder.Default
     private List<Answer> answers = new ArrayList<>();
 
+    @Column
+    private Integer timeToCompleteSeconds;
+
+    @Enumerated(EnumType.STRING)
+    @Column
+    private AcademicLevel respondentAcademicLevel;
+
+    @Column
+    private String respondentFieldOfStudy;
+
+    @Column
+    private String respondentInstitution;
+
     @CreationTimestamp
     @Column(updatable = false)
-    private LocalDateTime submittedAt;
+    private Instant respondedAt;
 }

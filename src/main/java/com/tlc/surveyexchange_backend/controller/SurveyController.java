@@ -1,7 +1,9 @@
 package com.tlc.surveyexchange_backend.controller;
 
 import com.tlc.surveyexchange_backend.dto.request.CreateSurveyRequest;
+import com.tlc.surveyexchange_backend.dto.request.PatchSurveyRequest;
 import com.tlc.surveyexchange_backend.dto.request.SubmitResponseRequest;
+import com.tlc.surveyexchange_backend.dto.request.UpdateSurveyRequest;
 import com.tlc.surveyexchange_backend.dto.response.*;
 import com.tlc.surveyexchange_backend.security.UserPrincipal;
 import com.tlc.surveyexchange_backend.service.ResponseService;
@@ -36,7 +38,7 @@ public class SurveyController {
     @Operation(
             summary = "Get survey feed",
             description = "Returns a paginated list of surveys the authenticated user has not created and has not yet answered. "
-                    + "Boosted surveys appear first, then most recent."
+                          + "Boosted surveys appear first, then most recent."
     )
     @ApiResponse(responseCode = "200", description = "Feed returned")
     @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token", content = @Content)
@@ -63,7 +65,7 @@ public class SurveyController {
     @Operation(
             summary = "Create a survey",
             description = "Creates a new survey with the provided questions. "
-                    + "The survey's credit value is automatically calculated from question types."
+                          + "The survey's credit value is automatically calculated from question types."
     )
     @ApiResponse(responseCode = "201", description = "Survey created",
             content = @Content(schema = @Schema(implementation = SurveyResponse.class)))
@@ -95,10 +97,11 @@ public class SurveyController {
 
     @Operation(
             summary = "Submit a response to a survey",
-            description = "Saves the user's answers and atomically awards +1 credit. "
-                    + "A user cannot respond to their own survey or respond more than once."
+            description = "Saves the user's answers and atomically awards credits equal to the survey's credit value."
+                          + " A user cannot respond to their own survey or respond more than once."
     )
-    @ApiResponse(responseCode = "201", description = "Response submitted and credit awarded")
+    @ApiResponse(responseCode = "201", description = "Response submitted and credit awarded",
+            content = @Content(schema = @Schema(implementation = SubmitResponseDto.class)))
     @ApiResponse(responseCode = "400", description = "Validation error",
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token", content = @Content)
@@ -109,12 +112,57 @@ public class SurveyController {
     @ApiResponse(responseCode = "409", description = "Already responded to this survey",
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     @PostMapping("/{id}/respond")
-    public ResponseEntity<Void> submitResponse(
+    public ResponseEntity<SubmitResponseDto> submitResponse(
             @Parameter(description = "Survey UUID") @PathVariable UUID id,
             @AuthenticationPrincipal UserPrincipal currentUser,
             @Valid @RequestBody SubmitResponseRequest request) {
-        responseService.submitResponse(id, request, currentUser.getId());
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        int newBalance = responseService.submitResponse(id, request, currentUser.getId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(new SubmitResponseDto(newBalance));
+    }
+
+    @Operation(
+            summary = "Edit a survey",
+            description = "Updates a survey's content. Only the owner may call this, and only for DRAFT or ACTIVE surveys. "
+                    + "If questions are provided they fully replace the existing list and the credit value is recalculated. "
+                    + "Omit questions to leave them unchanged."
+    )
+    @ApiResponse(responseCode = "200", description = "Survey updated",
+            content = @Content(schema = @Schema(implementation = SurveyResponse.class)))
+    @ApiResponse(responseCode = "400", description = "Validation error",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token", content = @Content)
+    @ApiResponse(responseCode = "403", description = "Not the owner or survey is closed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @ApiResponse(responseCode = "404", description = "Survey not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @PutMapping("/{id}")
+    public ResponseEntity<SurveyResponse> updateSurvey(
+            @Parameter(description = "Survey UUID") @PathVariable UUID id,
+            @AuthenticationPrincipal UserPrincipal currentUser,
+            @Valid @RequestBody UpdateSurveyRequest request) {
+        return ResponseEntity.ok(surveyService.updateSurvey(id, currentUser.getId(), request));
+    }
+
+    @Operation(
+            summary = "Update survey status",
+            description = "Transitions the survey to a new status. Valid moves: DRAFT→ACTIVE (publish), "
+                          + "ACTIVE→CLOSED (close), CLOSED→ACTIVE (re-open). Only the owner may call this."
+    )
+    @ApiResponse(responseCode = "200", description = "Status updated",
+            content = @Content(schema = @Schema(implementation = SurveySummaryResponse.class)))
+    @ApiResponse(responseCode = "401", description = "Missing or invalid JWT token", content = @Content)
+    @ApiResponse(responseCode = "403", description = "Caller is not the survey owner",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @ApiResponse(responseCode = "404", description = "Survey not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @ApiResponse(responseCode = "409", description = "Survey is already in the requested status",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @PatchMapping("/{id}")
+    public ResponseEntity<SurveySummaryResponse> updateStatus(
+            @Parameter(description = "Survey UUID") @PathVariable UUID id,
+            @AuthenticationPrincipal UserPrincipal currentUser,
+            @Valid @RequestBody PatchSurveyRequest request) {
+        return ResponseEntity.ok(surveyService.updateStatus(id, currentUser.getId(), request.getStatus()));
     }
 
 }
