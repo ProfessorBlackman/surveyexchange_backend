@@ -93,6 +93,6 @@ public class ResponseService {
 
     private Integer capCompletionTime(Integer rawSeconds) {
         if (rawSeconds == null) return null;
-        return Math.max(Math.min(rawSeconds, 7200), 0);
+        return Math.clamp(rawSeconds, 0, 7200);
     }
 }

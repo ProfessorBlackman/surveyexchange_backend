@@ -23,7 +23,7 @@ public class JwtTokenProvider {
     public JwtTokenProvider(
             @Value("${app.jwt.secret}") String secret,
             @Value("${app.jwt.expiration-ms}") long expirationMs) {
-        this.secretBytes = java.util.Base64.getDecoder().decode(secret);
+        this.secretBytes = java.util.Base64.getUrlDecoder().decode(secret);
         this.expirationMs = expirationMs;
     }
 
