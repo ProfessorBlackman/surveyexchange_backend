@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{admin/fragments/layout :: head('Users')}"></head>
+<body class="antialiased">
+<div class="page">
+
+  <th:block th:replace="~{admin/fragments/layout :: sidebar('users')}"></th:block>
+
+  <div class="page-wrapper">
+    <div class="page-header d-print-none">
+      <div class="container-xl">
+        <div class="row align-items-center">
+          <div class="col">
+            <h2 class="page-title">Users</h2>
+            <span class="text-muted" th:text="'Total: ' + ${users.totalElements}"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <div class="container-xl">
+
+        <!-- Search -->
+        <form method="get" action="/admin/users" class="mb-3">
+          <div class="input-group">
+            <input type="text" name="search" th:value="${search}"
+                   class="form-control" placeholder="Search by name or email…"/>
+            <button type="submit" class="btn btn-primary">Search</button>
+            <a href="/admin/users" class="btn btn-outline-secondary" th:if="${!search.isEmpty()}">Clear</a>
+          </div>
+        </form>
+
+        <!-- Table -->
+        <div class="card">
+          <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Institution</th>
+                  <th>Credits</th>
+                  <th>Joined</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="u : ${users.content}">
+                  <td th:text="${u.fullName}">—</td>
+                  <td th:text="${u.email}">—</td>
+                  <td th:text="${u.institution}">—</td>
+                  <td th:text="${u.creditBalance}">0</td>
+                  <td th:text="${u.createdAt != null ? u.createdAt.toString().substring(0,10) : '—'}">—</td>
+                  <td>
+                    <a th:href="@{/admin/users/{id}(id=${u.id})}" class="btn btn-sm">View</a>
+                  </td>
+                </tr>
+                <tr th:if="${users.content.isEmpty()}">
+                  <td colspan="6" class="text-center text-muted py-4">No users found.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="card-footer d-flex align-items-center" th:if="${users.totalPages > 1}">
+            <ul class="pagination m-0">
+              <li th:classappend="${users.first} ? 'disabled'" class="page-item">
+                <a class="page-link" th:href="@{/admin/users(page=${users.number - 1}, search=${search})}">prev</a>
+              </li>
+              <li th:each="i : ${#numbers.sequence(0, users.totalPages - 1)}"
+                  th:classappend="${i == users.number} ? 'active'" class="page-item">
+                <a class="page-link"
+                   th:href="@{/admin/users(page=${i}, search=${search})}"
+                   th:text="${i + 1}">1</a>
+              </li>
+              <li th:classappend="${users.last} ? 'disabled'" class="page-item">
+                <a class="page-link" th:href="@{/admin/users(page=${users.number + 1}, search=${search})}">next</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+<th:block th:replace="~{admin/fragments/layout :: scripts}"></th:block>
+</body>
+</html>

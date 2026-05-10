@@ -1,6 +1,7 @@
 package com.tlc.surveyexchange_backend.repository;
 
 import com.tlc.surveyexchange_backend.model.Survey;
+import com.tlc.surveyexchange_backend.model.SurveyStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -39,4 +40,26 @@ public interface SurveyRepository extends JpaRepository<Survey, UUID> {
     Optional<Survey> findByIdWithQuestions(@Param("id") UUID id);
 
     List<Survey> findByOwnerIdOrderByCreatedAtDesc(UUID ownerId);
+
+    long countByOwnerId(UUID ownerId);
+
+    @Query("SELECT COUNT(s) FROM Survey s WHERE s.boostExpiresAt > CURRENT_TIMESTAMP")
+    long countActiveBoosts();
+
+    @Query(value = """
+            SELECT s FROM Survey s
+            WHERE (:status IS NULL OR s.status = :status)
+            AND (:search IS NULL OR :search = ''
+                 OR LOWER(s.title) LIKE LOWER(CONCAT('%', :search, '%')))
+            ORDER BY s.createdAt DESC
+            """,
+            countQuery = """
+            SELECT COUNT(s) FROM Survey s
+            WHERE (:status IS NULL OR s.status = :status)
+            AND (:search IS NULL OR :search = ''
+                 OR LOWER(s.title) LIKE LOWER(CONCAT('%', :search, '%')))
+            """)
+    Page<Survey> findForAdmin(@Param("status") SurveyStatus status,
+                              @Param("search") String search,
+                              Pageable pageable);
 }

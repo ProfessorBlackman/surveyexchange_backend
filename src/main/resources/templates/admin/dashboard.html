@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{admin/fragments/layout :: head('Dashboard')}"></head>
+<body class="antialiased">
+<div class="page">
+
+  <th:block th:replace="~{admin/fragments/layout :: sidebar('dashboard')}"></th:block>
+
+  <div class="page-wrapper">
+    <div class="page-header d-print-none">
+      <div class="container-xl">
+        <div class="row align-items-center">
+          <div class="col"><h2 class="page-title">Dashboard</h2></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <div class="container-xl">
+
+        <!-- Metric cards -->
+        <div class="row row-deck row-cards mb-4">
+          <div class="col-sm-6 col-lg-4">
+            <div class="card">
+              <div class="card-body">
+                <div class="subheader mb-2">Total Users</div>
+                <div class="h1" th:text="${stats.totalUsers}">0</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-4">
+            <div class="card">
+              <div class="card-body">
+                <div class="subheader mb-2">Total Surveys</div>
+                <div class="h1" th:text="${stats.totalSurveys}">0</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-4">
+            <div class="card">
+              <div class="card-body">
+                <div class="subheader mb-2">Total Responses</div>
+                <div class="h1" th:text="${stats.totalResponses}">0</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-6">
+            <div class="card">
+              <div class="card-body">
+                <div class="subheader mb-2">Active Boosts</div>
+                <div class="h1" th:text="${stats.activeBoosts}">0</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-6">
+            <div class="card">
+              <div class="card-body">
+                <div class="subheader mb-2">Credits in Circulation</div>
+                <div class="h1" th:text="${stats.creditsInCirculation}">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Responses — Last 7 Days</h3>
+          </div>
+          <div class="card-body">
+            <canvas id="responsesChart" style="max-height: 280px;"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+<th:block th:replace="~{admin/fragments/layout :: scripts}"></th:block>
+<script th:inline="javascript">
+  /*<![CDATA[*/
+  const labels = /*[[${chartLabels}]]*/ [];
+  const values = /*[[${chartValues}]]*/ [];
+
+  new Chart(document.getElementById('responsesChart'), {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Responses',
+        data: values,
+        fill: true,
+        borderColor: '#206bc4',
+        backgroundColor: 'rgba(32,107,196,0.08)',
+        tension: 0.3,
+        pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+  });
+  /*]]>*/
+</script>
+</body>
+</html>

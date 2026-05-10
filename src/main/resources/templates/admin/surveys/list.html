@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{admin/fragments/layout :: head('Surveys')}"></head>
+<body class="antialiased">
+<div class="page">
+
+  <th:block th:replace="~{admin/fragments/layout :: sidebar('surveys')}"></th:block>
+
+  <div class="page-wrapper">
+    <div class="page-header d-print-none">
+      <div class="container-xl">
+        <div class="row align-items-center">
+          <div class="col">
+            <h2 class="page-title">Surveys</h2>
+            <span class="text-muted" th:text="'Total: ' + ${surveys.totalElements}"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flash message -->
+    <div class="container-xl pt-3" th:if="${successMsg}">
+      <div class="alert alert-success alert-dismissible" role="alert">
+        <span th:text="${successMsg}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <div class="container-xl">
+
+        <!-- Filters -->
+        <form method="get" action="/admin/surveys" class="mb-3">
+          <div class="row g-2">
+            <div class="col">
+              <input type="text" name="search" th:value="${search}"
+                     class="form-control" placeholder="Search by title…"/>
+            </div>
+            <div class="col-auto">
+              <select name="status" class="form-select">
+                <option value="">All statuses</option>
+                <option th:each="s : ${statuses}"
+                        th:value="${s}"
+                        th:text="${s}"
+                        th:selected="${s.name() == status}">STATUS</option>
+              </select>
+            </div>
+            <div class="col-auto">
+              <button type="submit" class="btn btn-primary">Filter</button>
+              <a href="/admin/surveys" class="btn btn-outline-secondary">Clear</a>
+            </div>
+          </div>
+        </form>
+
+        <!-- Table -->
+        <div class="card">
+          <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Owner</th>
+                  <th>Status</th>
+                  <th>Responses</th>
+                  <th>Credit Value</th>
+                  <th>Created</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="s : ${surveys.content}">
+                  <td th:text="${s.title}">—</td>
+                  <td th:text="${s.owner.fullName}">—</td>
+                  <td>
+                    <span class="badge"
+                          th:classappend="${s.status.name() == 'ACTIVE'} ? 'bg-green-lt' : (${s.status.name() == 'DRAFT'} ? 'bg-yellow-lt' : 'bg-red-lt')"
+                          th:text="${s.status}">STATUS</span>
+                  </td>
+                  <td th:text="${s.actualResponseCount + '/' + (s.targetResponses != null ? s.targetResponses : '∞')}">0</td>
+                  <td th:text="${s.creditValue}">0</td>
+                  <td th:text="${s.createdAt != null ? s.createdAt.toString().substring(0,10) : '—'}">—</td>
+                  <td>
+                    <a th:href="@{/admin/surveys/{id}(id=${s.id})}" class="btn btn-sm">View</a>
+                  </td>
+                </tr>
+                <tr th:if="${surveys.content.isEmpty()}">
+                  <td colspan="7" class="text-center text-muted py-4">No surveys found.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="card-footer d-flex align-items-center" th:if="${surveys.totalPages > 1}">
+            <ul class="pagination m-0">
+              <li th:classappend="${surveys.first} ? 'disabled'" class="page-item">
+                <a class="page-link"
+                   th:href="@{/admin/surveys(page=${surveys.number - 1}, search=${search}, status=${status})}">prev</a>
+              </li>
+              <li th:each="i : ${#numbers.sequence(0, surveys.totalPages - 1)}"
+                  th:classappend="${i == surveys.number} ? 'active'" class="page-item">
+                <a class="page-link"
+                   th:href="@{/admin/surveys(page=${i}, search=${search}, status=${status})}"
+                   th:text="${i + 1}">1</a>
+              </li>
+              <li th:classappend="${surveys.last} ? 'disabled'" class="page-item">
+                <a class="page-link"
+                   th:href="@{/admin/surveys(page=${surveys.number + 1}, search=${search}, status=${status})}">next</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+<th:block th:replace="~{admin/fragments/layout :: scripts}"></th:block>
+</body>
+</html>

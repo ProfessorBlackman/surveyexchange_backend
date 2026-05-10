@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{admin/fragments/layout :: head('Survey Detail')}"></head>
+<body class="antialiased">
+<div class="page">
+
+  <th:block th:replace="~{admin/fragments/layout :: sidebar('surveys')}"></th:block>
+
+  <div class="page-wrapper">
+    <div class="page-header d-print-none">
+      <div class="container-xl">
+        <div class="row align-items-center">
+          <div class="col-auto">
+            <a href="/admin/surveys" class="btn btn-outline-secondary btn-sm">← Back</a>
+          </div>
+          <div class="col">
+            <h2 class="page-title" th:text="${survey.title}">Survey</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <div class="container-xl">
+        <div class="row">
+
+          <!-- Metadata -->
+          <div class="col-lg-4 mb-4">
+            <div class="card mb-3">
+              <div class="card-header"><h3 class="card-title">Details</h3></div>
+              <div class="card-body">
+                <dl class="row mb-0">
+                  <dt class="col-5">Status</dt>
+                  <dd class="col-7">
+                    <span class="badge"
+                          th:classappend="${survey.status.name() == 'ACTIVE'} ? 'bg-green-lt' : (${survey.status.name() == 'DRAFT'} ? 'bg-yellow-lt' : 'bg-red-lt')"
+                          th:text="${survey.status}">—</span>
+                  </dd>
+                  <dt class="col-5">Owner</dt>
+                  <dd class="col-7">
+                    <a th:href="@{/admin/users/{id}(id=${survey.owner.id})}" th:text="${survey.owner.fullName}">—</a>
+                  </dd>
+                  <dt class="col-5">Category</dt>
+                  <dd class="col-7" th:text="${survey.category ?: '—'}">—</dd>
+                  <dt class="col-5">Credit Value</dt>
+                  <dd class="col-7" th:text="${survey.creditValue}">0</dd>
+                  <dt class="col-5">Responses</dt>
+                  <dd class="col-7"
+                      th:text="${survey.actualResponseCount + ' / ' + (survey.targetResponses != null ? survey.targetResponses : '∞')}">0</dd>
+                  <dt class="col-5">Created</dt>
+                  <dd class="col-7" th:text="${survey.createdAt != null ? survey.createdAt.toString().substring(0,10) : '—'}">—</dd>
+                  <dt class="col-5" th:if="${survey.publishedAt != null}">Published</dt>
+                  <dd class="col-7" th:if="${survey.publishedAt != null}"
+                      th:text="${survey.publishedAt.toString().substring(0,10)}">—</dd>
+                </dl>
+              </div>
+            </div>
+
+            <!-- Admin actions -->
+            <div class="card" th:if="${survey.status.name() != 'CLOSED'}">
+              <div class="card-header"><h3 class="card-title">Actions</h3></div>
+              <div class="card-body d-grid gap-2">
+                <form th:action="@{/admin/surveys/{id}/disable(id=${survey.id})}" method="post">
+                  <button type="submit" class="btn btn-warning w-100"
+                          onclick="return confirm('Close this survey?')">Close Survey</button>
+                </form>
+                <form th:action="@{/admin/surveys/{id}/delete(id=${survey.id})}" method="post">
+                  <button type="submit" class="btn btn-danger w-100"
+                          onclick="return confirm('Permanently delete this survey and all its responses?')">Delete Survey</button>
+                </form>
+              </div>
+            </div>
+            <div class="card" th:if="${survey.status.name() == 'CLOSED'}">
+              <div class="card-body d-grid">
+                <form th:action="@{/admin/surveys/{id}/delete(id=${survey.id})}" method="post">
+                  <button type="submit" class="btn btn-danger w-100"
+                          onclick="return confirm('Permanently delete this survey and all its responses?')">Delete Survey</button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Questions -->
+          <div class="col-lg-8 mb-4">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Questions
+                  <span class="badge bg-blue-lt ms-2" th:text="${survey.questions.size()}">0</span>
+                </h3>
+              </div>
+              <div class="list-group list-group-flush">
+                <div th:each="q, iter : ${survey.questions}" class="list-group-item">
+                  <div class="row align-items-center">
+                    <div class="col-auto text-muted" th:text="${iter.index + 1}">1</div>
+                    <div class="col">
+                      <div th:text="${q.text}">Question text</div>
+                      <div class="text-muted small" th:text="${q.questionType}">TYPE</div>
+                    </div>
+                    <div class="col-auto" th:if="${q.required}">
+                      <span class="badge bg-red-lt">Required</span>
+                    </div>
+                  </div>
+                  <div th:if="${!q.options.isEmpty()}" class="mt-1 ms-4">
+                    <span th:each="opt, i : ${q.options}"
+                          class="badge bg-secondary-lt me-1"
+                          th:text="${opt}">Option</span>
+                  </div>
+                </div>
+                <div th:if="${survey.questions.isEmpty()}" class="list-group-item text-muted text-center py-4">
+                  No questions.
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<th:block th:replace="~{admin/fragments/layout :: scripts}"></th:block>
+</body>
+</html>

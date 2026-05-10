@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{admin/fragments/layout :: head('Transactions')}"></head>
+<body class="antialiased">
+<div class="page">
+
+  <th:block th:replace="~{admin/fragments/layout :: sidebar('transactions')}"></th:block>
+
+  <div class="page-wrapper">
+    <div class="page-header d-print-none">
+      <div class="container-xl">
+        <div class="row align-items-center">
+          <div class="col">
+            <h2 class="page-title">Transactions</h2>
+            <span class="text-muted" th:text="'Total: ' + ${transactions.totalElements}"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <div class="container-xl">
+
+        <!-- Filter -->
+        <form method="get" action="/admin/transactions" class="mb-3">
+          <div class="row g-2">
+            <div class="col-auto">
+              <select name="type" class="form-select">
+                <option value="">All types</option>
+                <option th:each="t : ${types}"
+                        th:value="${t}"
+                        th:text="${t}"
+                        th:selected="${t.name() == type}">TYPE</option>
+              </select>
+            </div>
+            <div class="col-auto">
+              <button type="submit" class="btn btn-primary">Filter</button>
+              <a href="/admin/transactions" class="btn btn-outline-secondary">Clear</a>
+            </div>
+          </div>
+        </form>
+
+        <!-- Table -->
+        <div class="card">
+          <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Description</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="t : ${transactions.content}">
+                  <td>
+                    <a th:href="@{/admin/users/{id}(id=${t.user.id})}" th:text="${t.user.fullName}">—</a>
+                  </td>
+                  <td>
+                    <span class="badge"
+                          th:classappend="${t.amount > 0} ? 'bg-green-lt' : 'bg-red-lt'"
+                          th:text="${t.type}">TYPE</span>
+                  </td>
+                  <td>
+                    <span th:classappend="${t.amount > 0} ? 'text-success' : 'text-danger'"
+                          th:text="${t.amount > 0 ? '+' + t.amount : t.amount}">0</span>
+                  </td>
+                  <td th:text="${t.description ?: '—'}">—</td>
+                  <td th:text="${t.createdAt != null ? t.createdAt.toString().substring(0,10) : '—'}">—</td>
+                </tr>
+                <tr th:if="${transactions.content.isEmpty()}">
+                  <td colspan="5" class="text-center text-muted py-4">No transactions found.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="card-footer d-flex align-items-center" th:if="${transactions.totalPages > 1}">
+            <ul class="pagination m-0">
+              <li th:classappend="${transactions.first} ? 'disabled'" class="page-item">
+                <a class="page-link"
+                   th:href="@{/admin/transactions(page=${transactions.number - 1}, type=${type})}">prev</a>
+              </li>
+              <li th:each="i : ${#numbers.sequence(0, transactions.totalPages - 1)}"
+                  th:classappend="${i == transactions.number} ? 'active'" class="page-item">
+                <a class="page-link"
+                   th:href="@{/admin/transactions(page=${i}, type=${type})}"
+                   th:text="${i + 1}">1</a>
+              </li>
+              <li th:classappend="${transactions.last} ? 'disabled'" class="page-item">
+                <a class="page-link"
+                   th:href="@{/admin/transactions(page=${transactions.number + 1}, type=${type})}">next</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+<th:block th:replace="~{admin/fragments/layout :: scripts}"></th:block>
+</body>
+</html>

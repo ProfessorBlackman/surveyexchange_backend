@@ -29,4 +29,10 @@ public interface ResponseRepository extends JpaRepository<Response, UUID> {
             ORDER BY r.respondedAt DESC
             """)
     List<Response> findWithAnswersByIds(@Param("ids") List<UUID> ids);
+
+    long countByRespondentId(UUID respondentId);
+
+    List<Response> findByRespondedAtAfter(java.time.Instant since);
+
+    List<Response> findAllBySurveyId(UUID surveyId);
 }

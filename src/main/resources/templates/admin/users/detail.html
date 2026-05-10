@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{admin/fragments/layout :: head('User Detail')}"></head>
+<body class="antialiased">
+<div class="page">
+
+  <th:block th:replace="~{admin/fragments/layout :: sidebar('users')}"></th:block>
+
+  <div class="page-wrapper">
+    <div class="page-header d-print-none">
+      <div class="container-xl">
+        <div class="row align-items-center">
+          <div class="col-auto">
+            <a href="/admin/users" class="btn btn-outline-secondary btn-sm">← Back</a>
+          </div>
+          <div class="col">
+            <h2 class="page-title" th:text="${user.fullName}">User</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <div class="container-xl">
+        <div class="row">
+
+          <!-- Profile card -->
+          <div class="col-lg-4 mb-4">
+            <div class="card">
+              <div class="card-header"><h3 class="card-title">Profile</h3></div>
+              <div class="card-body">
+                <dl class="row mb-0">
+                  <dt class="col-5">Email</dt>
+                  <dd class="col-7" th:text="${user.email}">—</dd>
+                  <dt class="col-5">Institution</dt>
+                  <dd class="col-7" th:text="${user.institution}">—</dd>
+                  <dt class="col-5">Field</dt>
+                  <dd class="col-7" th:text="${user.fieldOfStudy}">—</dd>
+                  <dt class="col-5">Level</dt>
+                  <dd class="col-7" th:text="${user.academicLevel}">—</dd>
+                  <dt class="col-5">Gender</dt>
+                  <dd class="col-7" th:text="${user.gender}">—</dd>
+                  <dt class="col-5">Age Range</dt>
+                  <dd class="col-7" th:text="${user.ageRange}">—</dd>
+                  <dt class="col-5">Joined</dt>
+                  <dd class="col-7" th:text="${user.createdAt != null ? user.createdAt.toString().substring(0,10) : '—'}">—</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats card -->
+          <div class="col-lg-8 mb-4">
+            <div class="row">
+              <div class="col-4">
+                <div class="card">
+                  <div class="card-body text-center">
+                    <div class="subheader">Credits</div>
+                    <div class="h2 mt-1" th:text="${user.creditBalance}">0</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="card">
+                  <div class="card-body text-center">
+                    <div class="subheader">Surveys Created</div>
+                    <div class="h2 mt-1" th:text="${surveyCount}">0</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="card">
+                  <div class="card-body text-center">
+                    <div class="subheader">Responses Submitted</div>
+                    <div class="h2 mt-1" th:text="${responseCount}">0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent transactions -->
+            <div class="card mt-3">
+              <div class="card-header"><h3 class="card-title">Recent Transactions</h3></div>
+              <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                  <thead>
+                    <tr><th>Type</th><th>Amount</th><th>Description</th><th>Date</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr th:each="t : ${transactions}">
+                      <td>
+                        <span class="badge"
+                              th:classappend="${t.amount > 0} ? 'bg-green-lt' : 'bg-red-lt'"
+                              th:text="${t.type}">TYPE</span>
+                      </td>
+                      <td th:text="${t.amount > 0 ? '+' + t.amount : t.amount}">0</td>
+                      <td th:text="${t.description}">—</td>
+                      <td th:text="${t.createdAt != null ? t.createdAt.toString().substring(0,10) : '—'}">—</td>
+                    </tr>
+                    <tr th:if="${transactions.isEmpty()}">
+                      <td colspan="4" class="text-center text-muted">No transactions.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<th:block th:replace="~{admin/fragments/layout :: scripts}"></th:block>
+</body>
+</html>
